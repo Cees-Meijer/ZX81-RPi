@@ -21,25 +21,13 @@ char addressLines[] = {8,9,7,0 ,2 ,3 ,12,13};//wiringpi
 // The ZX 80 Keyboard Matrix (Mapped to hardware keyboard )
 char keys[8][5] = {
 	{'B','N','M','.',' '},
-	{'H','J','K','L','\xA'},  // ENTER,
-	{'V','C','X','Z','\x12'}, //0x12 Leftshift
-	{'Y','U','I','O','S'},
+	{'H','J','K','L',ENTER},  // ENTER,
+	{'V','C','X','Z',SHIFT}, //0x12 Leftshift
+	{'Y','U','I','O','P'},
 	{'G','F','D','S','A'},
 	{'6','7','8','9','0'},
 	{'T','R','E','W','Q'},       
 	{'5','4','3','2','1'} 
-};
-
-// Function key mode
-char funcKeys[8][5] = {
-	{'\x16','\x17','\x18','\x19','\x1A'}, //F1,F2,F3,F4, LEFT
-	{'Q','W','E','R','T'},
-	{'A','S','D','F','G'},
-	{'\x1B','9','\x13','\x14','\x15'}, //ESC,9,RIGHT,UP,DOWN
-	{'P','O','I','U','Y'},
-	{'\x12','Z','X','C','V'}, //LEFTSHIFT
-	{'\x0D','L','K','J','H'},
-	{'\x20','\x11','M','N','B'}
 };
 
 // Track keypresses so we can support multiple keys
@@ -61,8 +49,6 @@ int buttonTime = 0;
 int isFree = 0;
 char keyPressed =0;
 
-// 0 = Spectrum, 1 = Function Keys
-int keyboardMode = 0;
 
 void init_keyboard()
 {
@@ -93,9 +79,9 @@ void set_addresLine(int addressLine)
 	digitalWrite(addressLines[addressLine], 1);
 }
 
-int kb_scan()
+int kb_scan(unsigned int *key)
 {
- 
+ int type = 0;
  		// Individually set each address line high
 		for(int addressLine=0;addressLine<NR_ADDRESLINES;addressLine++)
 		{
@@ -106,21 +92,16 @@ int kb_scan()
 			{
 				//# Get state and details for this button
 				isFree = digitalRead(dataLines[dataLine]);
-
-				if(keyboardMode == 0)
-				{
-					keyPressed = keys[addressLine][dataLine];
-				}
-				else
-				{
-					keyPressed = funcKeys[addressLine][dataLine];
-				}
+				keyPressed = keys[addressLine][dataLine];
+				
 				// If pressed for the first time
 				if(isFree == 1 && keyTrack[addressLine][dataLine] == 0)
                 {
 					//# Press the key and make a note
 					printf("A:%d,D:%d [%c]\r\n", addressLine,dataLine,keyPressed);
 					keyTrack[addressLine][dataLine] = 1;
+					*key = (unsigned int)keyPressed;
+					type = K_PRESS;
 					
 				}
 
@@ -130,6 +111,8 @@ int kb_scan()
 					//# Release the key and make a note
 					//printf("Releasing %c", keyPressed);
 					keyTrack[addressLine][dataLine] = 0;
+					*key = (unsigned int)keyPressed;
+					type=K_RELEASE;
 				}
 
 			delay(1);
@@ -137,5 +120,7 @@ int kb_scan()
 			digitalWrite(addressLines[addressLine], LOW);
 
 	    }
- return keyPressed;
+	    
+	    
+ return type;
 }

@@ -52,10 +52,10 @@ LIBDIR=$(PREFIX)/lib/z81
 #-----------------------------------------------------------------
 
 # this looks wrong, but *ops.c are actually #include'd by z80.c
-Z81_OBJS=main.o common.o sound.o z80.o
-XZ81_OBJS=xmain.o common.o sound.o z80.o
+Z81_OBJS=main.o common.o sound.o z80.o keyscanner.o
+XZ81_OBJS=xmain.o common.o sound.o z80.o keyscanner.o
 
-CFLAGS=-I$(XROOT)/include -g -O -Wall $(SOUNDDEF) \
+CFLAGS=-I$(XROOT)/include -g -O -Wall -Wno-pointer-sign $(SOUNDDEF) \
 	$(XDEF) $(INLINEDEF) -DLIBDIR=\"$(LIBDIR)\"
 
 all: z81 xz81
@@ -63,10 +63,10 @@ all: z81 xz81
 # we make zx81get if z81 (the only Linux-specific one) is made.
 
 z81: $(Z81_OBJS) zx81get
-	$(CC) $(CFLAGS) -o z81 $(Z81_OBJS) -lvga
+	$(CC) $(CFLAGS) -o z81 $(Z81_OBJS) -lvga -lwiringPi
 
 xz81: $(XZ81_OBJS)
-	$(CC) $(CFLAGS) -o xz81 $(XZ81_OBJS) -L$(XROOT)/lib -lXext -lX11
+	$(CC) $(CFLAGS) -o xz81 $(XZ81_OBJS) -L$(XROOT)/lib -lXext -lX11 -lwiringPi
 
 zx81get: zx81get.o
 	$(CC) $(CFLAGS) -o zx81get zx81get.o

@@ -70,7 +70,7 @@ static unsigned char zxpline[256];
 int refresh_screen=1;
 
 /* =1 if emulating ZX80 rather than ZX81 */
-int zx80=0;
+int zx80=1;
 
 int ignore_esc=0;
 

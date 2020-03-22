@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+#include "keyscanner.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -395,6 +396,8 @@ void startup()
    XMapRaised(display,mainwin);
    XFlush(display);
    refresh_screen=1;
+   
+   init_keyboard(); // Initialize the Hardware keyboard
 }
 
 
@@ -402,7 +405,7 @@ void startup()
 #ifdef INLINE_DRAWPIX
 inline
 #endif
-void drawpix(int x,int y,int d)
+static void drawpix(int x,int y,int d)
 {
 unsigned char *tmp;
 int mask=256;
@@ -543,9 +546,10 @@ XKeyEvent *kev;
 {
    char buf[3];
    KeySym ks;
+  
 
    XLookupString(kev,buf,2,&ks,NULL);
-
+   printf("Press:%ld,%d\n",ks,kev->type);
    switch(ks){
       case XK_F1:
         help=!help;
@@ -565,7 +569,8 @@ XKeyEvent *kev;
       case XK_Control_L: case XK_Shift_L: case XK_Shift_R:
       case XK_Alt_L: case XK_Alt_R: case XK_Meta_L: case XK_Meta_R:
               keyports[0]&=0xfe; break;
-      case XK_BackSpace: case XK_Delete:
+      case XK_BackSpace: 
+      case XK_Delete:
       case XK_Tab:
       case XK_Up:
       case XK_Down:
@@ -631,6 +636,21 @@ XKeyEvent *kev;
    }
 }
 
+static void process_hw_keypress(unsigned int ks)
+{
+   printf("Press: %d\n",ks);
+   if(ks==SHIFT){keyports[0]&=0xfe; return;}
+   if(ks==ENTER){keyports[6]&=0xfe; return;}
+   if((int)(ks-=32)>=0 && ks<128)
+               { keyports[keytable[ks].port]&=keytable[ks].mask;}
+}
+static void process_hw_keyrelease(unsigned int ks)
+{
+   if(ks==SHIFT){keyports[0]|=1; return;}
+   if(ks==ENTER){keyports[6]|=1; return;}
+   if((int)(ks-=32)>=0 && ks<96)
+                { keyports[keytable[ks].port]|=~keytable[ks].mask;}
+}
 
 static void process_keyrelease(kev)
 XKeyEvent *kev;
@@ -639,7 +659,6 @@ XKeyEvent *kev;
    KeySym ks;
 
    XLookupString(kev,buf,2,&ks,NULL);
-
    switch(ks){
       case XK_Return:
               keyports[6]|=1; break;
@@ -719,7 +738,15 @@ void check_events()
 {
    static XEvent xev;
    XCrossingEvent *cev;
+   
+   // Section for hardware keyboard
+   unsigned int key;
+   unsigned int type = kb_scan(&key);
+   if(type == K_PRESS){process_hw_keypress(key);}
+   if(type == K_RELEASE){process_hw_keyrelease(key);}
 
+   
+   // Standard event handling
    while (XEventsQueued(display,QueuedAfterReading)){
       XNextEvent(display,&xev);
       switch(xev.type){
@@ -754,9 +781,6 @@ void check_events()
       }
    }
 }
-
-
-
 
 /* draw everything which has changed, then find the smallest rectangle
  * which covers all the changes, and update that.
