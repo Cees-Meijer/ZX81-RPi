@@ -390,7 +390,13 @@ void startup()
    
    mainwin=XCreateSimpleWindow(display,root,0,0,
              hsize,vsize,0,0,0);
-   XMoveWindow(display,mainwin,55,36);
+   Screen * screen;
+   screen= ScreenOfDisplay(display,0);
+
+   int movex= (screen->width-hsize)/2;
+   int movey = (screen->height- vsize)/2;
+   printf("%d,%d:%d,%d\n" ,screen->width,screen->height,movex,movey);
+   XMoveWindow(display,mainwin,movex,movey);
    // Fullscreen mode
    //Atom wm_state = XInternAtom(display,"_NET_WM_STATE",False);
    //Atom fullscreen = XInternAtom(display,"_NET_WM_STATE_FULLSCREEN",False);
