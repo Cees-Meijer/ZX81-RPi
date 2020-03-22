@@ -386,9 +386,31 @@ void startup()
       }
       else exit(1);
    }
-
+   printf("H%d,V%d\n",hsize,vsize);
+   
    mainwin=XCreateSimpleWindow(display,root,0,0,
              hsize,vsize,0,0,0);
+   XMoveWindow(display,mainwin,55,36);
+   // Fullscreen mode
+   //Atom wm_state = XInternAtom(display,"_NET_WM_STATE",False);
+   //Atom fullscreen = XInternAtom(display,"_NET_WM_STATE_FULLSCREEN",False);
+   //XChangeProperty(display,mainwin,wm_state,XA_ATOM,32,
+   //                PropModeReplace,(unsigned char*)&fullscreen,1);
+   /*
+   XEvent xev;
+   memset(&xev,0,sizeof(xev)); 
+   xev.type = ClientMessage;
+   xev.xclient.message_type = wm_state;
+   xev.xclient.window = mainwin;
+   xev.xclient.format =32;
+   xev.xclient.data.l[0]=1;
+   xev.xclient.data.l[1]=fullscreen;
+   xev.xclient.data.l[2]=0;
+   XMapWindow(display,mainwin);
+   XSendEvent(display,DefaultRootWindow(display),False,
+                      SubstructureRedirectMask | SubstructureNotifyMask, &xev);
+                      * */
+   // End of Fullscreen section             
    notify();
    XSelectInput(display,mainwin,KeyPressMask|KeyReleaseMask|
       ExposureMask|EnterWindowMask|LeaveWindowMask|
@@ -396,7 +418,6 @@ void startup()
    XMapRaised(display,mainwin);
    XFlush(display);
    refresh_screen=1;
-   
    init_keyboard(); // Initialize the Hardware keyboard
 }
 
