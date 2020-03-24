@@ -82,6 +82,9 @@ void set_addresLine(int addressLine)
 int kb_scan(unsigned int *key)
 {
  int type = 0;
+ int _cancel = 0;
+ int _help =0;
+ int _esc=0;
  		// Individually set each address line high
 		for(int addressLine=0;addressLine<NR_ADDRESLINES;addressLine++)
 		{
@@ -93,7 +96,12 @@ int kb_scan(unsigned int *key)
 				//# Get state and details for this button
 				isFree = digitalRead(dataLines[dataLine]);
 				keyPressed = keys[addressLine][dataLine];
-				
+				// If keys 1 and 0 pressed at the same time, generate the CANCEL key
+				if(keyPressed=='1' || keyPressed=='0' ){_cancel++;}
+				// If keys 1 and H pressed at the same time, generate the HELP key
+				if(keyPressed=='1' || keyPressed=='H' ){_help++;}
+				// If keys Shift, X and Space, generate the ESC key
+				if(keyPressed==SHIFT || keyPressed=='X'|| keyPressed==' ' ){_esc++;}
 				// If pressed for the first time
 				if(isFree == 1 && keyTrack[addressLine][dataLine] == 0)
                 {
@@ -120,6 +128,9 @@ int kb_scan(unsigned int *key)
 			digitalWrite(addressLines[addressLine], LOW);
 
 	    }
+	    if(_cancel>=2){*key = CANCEL;}
+	    if(_help>=2){*key = HELP;}
+	    if(_esc>=2){*key = ESC;}
 	    
 	    
  return type;
