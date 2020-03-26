@@ -49,7 +49,6 @@ int buttonTime = 0;
 int isFree = 0;
 char keyPressed =0;
 
-
 void init_keyboard()
 {
 wiringPiSetup();
@@ -82,9 +81,8 @@ void set_addresLine(int addressLine)
 int kb_scan(unsigned int *key)
 {
  int type = 0;
- int _cancel = 0;
- int _help =0;
- int _esc=0;
+ int _esc =0;
+ int _cancel =0;
  		// Individually set each address line high
 		for(int addressLine=0;addressLine<NR_ADDRESLINES;addressLine++)
 		{
@@ -95,13 +93,13 @@ int kb_scan(unsigned int *key)
 			{
 				//# Get state and details for this button
 				isFree = digitalRead(dataLines[dataLine]);
+				
 				keyPressed = keys[addressLine][dataLine];
-				// If keys 1 and 0 pressed at the same time, generate the CANCEL key
-				if(keyPressed=='1' || keyPressed=='0' ){_cancel++;}
-				// If keys 1 and H pressed at the same time, generate the HELP key
-				if(keyPressed=='1' || keyPressed=='H' ){_help++;}
-				// If keys Shift, X and Space, generate the ESC key
-				if(keyPressed==SHIFT || keyPressed=='X'|| keyPressed==' ' ){_esc++;}
+                if(isFree ==1)
+                {
+					if(keyPressed=='1' || keyPressed=='0'){_esc++;}
+					if(keyPressed==SHIFT || keyPressed=='1' || keyPressed=='0'){_cancel++;}
+				}
 				// If pressed for the first time
 				if(isFree == 1 && keyTrack[addressLine][dataLine] == 0)
                 {
@@ -110,7 +108,6 @@ int kb_scan(unsigned int *key)
 					keyTrack[addressLine][dataLine] = 1;
 					*key = (unsigned int)keyPressed;
 					type = K_PRESS;
-					
 				}
 
 				// If not pressed now but was pressed on last check
@@ -120,6 +117,7 @@ int kb_scan(unsigned int *key)
 					//printf("Releasing %c", keyPressed);
 					keyTrack[addressLine][dataLine] = 0;
 					*key = (unsigned int)keyPressed;
+					
 					type=K_RELEASE;
 				}
 
@@ -128,10 +126,8 @@ int kb_scan(unsigned int *key)
 			digitalWrite(addressLines[addressLine], LOW);
 
 	    }
-	    if(_cancel>=2){*key = CANCEL;}
-	    if(_help>=2){*key = HELP;}
-	    if(_esc>=2){*key = ESC;}
-	    
-	    
+        
+	    if(_esc>=2){*key =ESC;}				// Press 1 and 0 : ESC (=Soft Reset)
+	    if(_cancel>=3){*key = CANCEL;}		// Press Shift, 1 and 0 : CANCEL (=Exit program)
  return type;
 }

@@ -151,7 +151,6 @@ static XShmSegmentInfo xshminfo;
 /* needed to catch wm delete-window message */
 static Atom proto_atom=None,delete_atom=None;
 
-
 void closedown(){
 #ifdef OSS_SOUND_SUPPORT
    sound_end();
@@ -552,8 +551,9 @@ switch(imagebpp)
 
 static void process_hw_keypress(unsigned int ks)
 {
-   printf("Press: %d\n",ks);
-   
+   //printf("Press: %d\n",ks);
+   if(ks==CANCEL){exit_program();}
+   if(ks==ESC && !ignore_esc){ reset81();return;} 
    if(ks==SHIFT){keyports[0]&=0xfe; return;}
    if(ks==ENTER){keyports[6]&=0xfe; return;}
    if((int)(ks-=32)>=0 && ks<128)
@@ -561,9 +561,7 @@ static void process_hw_keypress(unsigned int ks)
 }
 static void process_hw_keyrelease(unsigned int ks)
 {
-   if(ks==CANCEL){exit_program();}
-   if(ks==ESC && !ignore_esc){ reset81();return;} 
-   if(ks==HELP){help=!help; return;}
+   
    if(ks==SHIFT){keyports[0]|=1; return;}
    if(ks==ENTER){keyports[6]|=1; return;}
    if((int)(ks-=32)>=0 && ks<96)
@@ -576,9 +574,8 @@ XKeyEvent *kev;
    char buf[3];
    KeySym ks;
   
-
    XLookupString(kev,buf,2,&ks,NULL);
-   printf("Press:%ld,%d\n",ks,kev->type);
+   //printf("Press:%ld,%d\n",ks,kev->type);
    switch(ks){
       case XK_F1:
         help=!help;
@@ -746,7 +743,6 @@ XKeyEvent *kev;
    return;
 }
 
-
 void check_events()
 {
    static XEvent xev;
@@ -757,7 +753,6 @@ void check_events()
    unsigned int type = kb_scan(&key);
    if(type == K_PRESS){process_hw_keypress(key);}
    if(type == K_RELEASE){process_hw_keyrelease(key);}
-
    
    // Standard event handling
    while (XEventsQueued(display,QueuedAfterReading)){
