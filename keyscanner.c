@@ -125,6 +125,6 @@ int kb_scan(unsigned int *key)
 
 	    }
         
-	    if(_esc>=2){*key =ESC;}				// Press Shift, 1 and SPACE : ESC (=Soft Reset)
+	    if(_esc>=3){*key =ESC;}				// Press Shift, 1 and SPACE : ESC (=Soft Reset)
  return type;
 }
