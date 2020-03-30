@@ -82,7 +82,6 @@ int kb_scan(unsigned int *key)
 {
  int type = 0;
  int _esc =0;
- int _cancel =0;
  		// Individually set each address line high
 		for(int addressLine=0;addressLine<NR_ADDRESLINES;addressLine++)
 		{
@@ -97,8 +96,7 @@ int kb_scan(unsigned int *key)
 				keyPressed = keys[addressLine][dataLine];
                 if(isFree ==1)
                 {
-					if(keyPressed=='1' || keyPressed=='0'){_esc++;}
-					if(keyPressed==SHIFT || keyPressed=='1' || keyPressed=='0'){_cancel++;}
+					if(keyPressed==SHIFT || keyPressed=='1' || keyPressed==' '){_esc++;}
 				}
 				// If pressed for the first time
 				if(isFree == 1 && keyTrack[addressLine][dataLine] == 0)
@@ -127,7 +125,6 @@ int kb_scan(unsigned int *key)
 
 	    }
         
-	    if(_esc>=2){*key =ESC;}				// Press 1 and 0 : ESC (=Soft Reset)
-	    if(_cancel>=3){*key = CANCEL;}		// Press Shift, 1 and 0 : CANCEL (=Exit program)
+	    if(_esc>=2){*key =ESC;}				// Press Shift, 1 and SPACE : ESC (=Soft Reset)
  return type;
 }
