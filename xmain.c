@@ -151,7 +151,6 @@ static XShmSegmentInfo xshminfo;
 /* needed to catch wm delete-window message */
 static Atom proto_atom=None,delete_atom=None;
 
-
 void closedown(){
 #ifdef OSS_SOUND_SUPPORT
    sound_end();
@@ -386,37 +385,20 @@ void startup()
       }
       else exit(1);
    }
-   printf("H%d,V%d\n",hsize,vsize);
    
    mainwin=XCreateSimpleWindow(display,root,0,0,
              hsize,vsize,0,0,0);
+   // Center the window in the middle of the screen.
    Screen * screen;
    screen= ScreenOfDisplay(display,0);
-
+   
    int movex= (screen->width-hsize)/2;
    int movey = (screen->height- vsize)/2;
-   printf("%d,%d:%d,%d\n" ,screen->width,screen->height,movex,movey);
-   XMoveWindow(display,mainwin,movex,movey);
-   // Fullscreen mode
-   //Atom wm_state = XInternAtom(display,"_NET_WM_STATE",False);
-   //Atom fullscreen = XInternAtom(display,"_NET_WM_STATE_FULLSCREEN",False);
-   //XChangeProperty(display,mainwin,wm_state,XA_ATOM,32,
-   //                PropModeReplace,(unsigned char*)&fullscreen,1);
-   /*
-   XEvent xev;
-   memset(&xev,0,sizeof(xev)); 
-   xev.type = ClientMessage;
-   xev.xclient.message_type = wm_state;
-   xev.xclient.window = mainwin;
-   xev.xclient.format =32;
-   xev.xclient.data.l[0]=1;
-   xev.xclient.data.l[1]=fullscreen;
-   xev.xclient.data.l[2]=0;
-   XMapWindow(display,mainwin);
-   XSendEvent(display,DefaultRootWindow(display),False,
-                      SubstructureRedirectMask | SubstructureNotifyMask, &xev);
-                      * */
-   // End of Fullscreen section             
+   //printf("%d,%d:%d,%d\n" ,screen->width,screen->height,movex,movey);
+   if(movex>0 && movey>0)
+   {
+    XMoveWindow(display,mainwin,movex,movey);
+   }
    notify();
    XSelectInput(display,mainwin,KeyPressMask|KeyReleaseMask|
       ExposureMask|EnterWindowMask|LeaveWindowMask|
@@ -567,6 +549,24 @@ switch(imagebpp)
   }
 }
 
+static void process_hw_keypress(unsigned int ks)
+{
+   //printf("Press: %d\n",ks);
+   if(ks==CANCEL){exit_program();}
+   if(ks==ESC && !ignore_esc){ reset81();return;} 
+   if(ks==SHIFT){keyports[0]&=0xfe; return;}
+   if(ks==ENTER){keyports[6]&=0xfe; return;}
+   if((int)(ks-=32)>=0 && ks<128)
+               { keyports[keytable[ks].port]&=keytable[ks].mask;}
+}
+static void process_hw_keyrelease(unsigned int ks)
+{
+   
+   if(ks==SHIFT){keyports[0]|=1; return;}
+   if(ks==ENTER){keyports[6]|=1; return;}
+   if((int)(ks-=32)>=0 && ks<96)
+                { keyports[keytable[ks].port]|=~keytable[ks].mask;}
+}
 
 static void process_keypress(kev)
 XKeyEvent *kev;
@@ -574,9 +574,8 @@ XKeyEvent *kev;
    char buf[3];
    KeySym ks;
   
-
    XLookupString(kev,buf,2,&ks,NULL);
-   printf("Press:%ld,%d\n",ks,kev->type);
+   //printf("Press:%ld,%d\n",ks,kev->type);
    switch(ks){
       case XK_F1:
         help=!help;
@@ -663,22 +662,6 @@ XKeyEvent *kev;
    }
 }
 
-static void process_hw_keypress(unsigned int ks)
-{
-   printf("Press: %d\n",ks);
-   if(ks==SHIFT){keyports[0]&=0xfe; return;}
-   if(ks==ENTER){keyports[6]&=0xfe; return;}
-   if((int)(ks-=32)>=0 && ks<128)
-               { keyports[keytable[ks].port]&=keytable[ks].mask;}
-}
-static void process_hw_keyrelease(unsigned int ks)
-{
-   if(ks==SHIFT){keyports[0]|=1; return;}
-   if(ks==ENTER){keyports[6]|=1; return;}
-   if((int)(ks-=32)>=0 && ks<96)
-                { keyports[keytable[ks].port]|=~keytable[ks].mask;}
-}
-
 static void process_keyrelease(kev)
 XKeyEvent *kev;
 {
@@ -760,7 +743,6 @@ XKeyEvent *kev;
    return;
 }
 
-
 void check_events()
 {
    static XEvent xev;
@@ -771,7 +753,6 @@ void check_events()
    unsigned int type = kb_scan(&key);
    if(type == K_PRESS){process_hw_keypress(key);}
    if(type == K_RELEASE){process_hw_keyrelease(key);}
-
    
    // Standard event handling
    while (XEventsQueued(display,QueuedAfterReading)){

@@ -49,7 +49,6 @@ int buttonTime = 0;
 int isFree = 0;
 char keyPressed =0;
 
-
 void init_keyboard()
 {
 wiringPiSetup();
@@ -82,6 +81,7 @@ void set_addresLine(int addressLine)
 int kb_scan(unsigned int *key)
 {
  int type = 0;
+ int _esc =0;
  		// Individually set each address line high
 		for(int addressLine=0;addressLine<NR_ADDRESLINES;addressLine++)
 		{
@@ -92,8 +92,12 @@ int kb_scan(unsigned int *key)
 			{
 				//# Get state and details for this button
 				isFree = digitalRead(dataLines[dataLine]);
-				keyPressed = keys[addressLine][dataLine];
 				
+				keyPressed = keys[addressLine][dataLine];
+                if(isFree ==1)
+                {
+					if(keyPressed==SHIFT || keyPressed=='1' || keyPressed==' '){_esc++;}
+				}
 				// If pressed for the first time
 				if(isFree == 1 && keyTrack[addressLine][dataLine] == 0)
                 {
@@ -102,7 +106,6 @@ int kb_scan(unsigned int *key)
 					keyTrack[addressLine][dataLine] = 1;
 					*key = (unsigned int)keyPressed;
 					type = K_PRESS;
-					
 				}
 
 				// If not pressed now but was pressed on last check
@@ -112,6 +115,7 @@ int kb_scan(unsigned int *key)
 					//printf("Releasing %c", keyPressed);
 					keyTrack[addressLine][dataLine] = 0;
 					*key = (unsigned int)keyPressed;
+					
 					type=K_RELEASE;
 				}
 
@@ -120,7 +124,7 @@ int kb_scan(unsigned int *key)
 			digitalWrite(addressLines[addressLine], LOW);
 
 	    }
-	    
-	    
+        
+	    if(_esc>=3){*key =ESC;}				// Press Shift, 1 and SPACE : ESC (=Soft Reset)
  return type;
 }
