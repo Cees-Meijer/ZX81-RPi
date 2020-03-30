@@ -12,7 +12,7 @@ CC=gcc
 # -DMITSHM should always be enabled unless you have problems compiling
 #  with it on (xz81's rather slow without it).
 #
-XDEF=-DSCALE=3 -DMITSHM
+XDEF=-DSCALE=2 -DMITSHM
 
 # sound support, which if compiled in can be enabled with `-s' and/or
 # `-a <type>'. Yes, don't worry, it's off by default. :-)
